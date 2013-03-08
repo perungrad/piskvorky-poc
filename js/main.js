@@ -1,4 +1,4 @@
-require(["libs/kinetic", "board"], function(Kinetic, Board) {
+require(["libs/kinetic", "jquery", "bootstrap", "board"], function(Kinetic, $, Bootstrap, Board) {
     var stage = new Kinetic.Stage({
         container: 'stage',
         width: 400,
@@ -12,4 +12,8 @@ require(["libs/kinetic", "board"], function(Kinetic, Board) {
     Board.draw();
 
     stage.add(boardLayer);
+
+    $("#btnReload").on("click", function() {
+        Board.reset();
+    });
 });

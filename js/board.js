@@ -38,6 +38,38 @@ define(["libs/kinetic"], function(Kinetic) {
             this.layer = layer;
         },
 
+        reset: function() {
+            // vyresetujeme hraciu dosku
+            this.gameOver = false;
+            this.board = [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 0]
+            ];
+
+            // vyresetujeme vahy
+            this.weights = [
+                [1, 0, 1],
+                [0, 2, 0],
+                [1, 0, 1]
+            ];
+
+            // zmazeme tiles
+            this.tiles = [
+                [],
+                [],
+                []
+            ];
+
+            // prekreslime hraciu plochu
+            this.layer.removeChildren();
+            this.layer.clear();
+
+            this.draw();
+
+            this.layer.draw();
+        },
+
         draw: function() {
             var rect = new Kinetic.Rect({
                 x: 0,
