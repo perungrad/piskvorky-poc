@@ -4,6 +4,8 @@ define(["libs/kinetic"], function(Kinetic) {
         PLAYER_HUMAN: 1,
         PLAYER_AI: 2,
 
+        victories: [],
+
         board: [
             [0, 0, 0],
             [0, 0, 0],
@@ -30,6 +32,12 @@ define(["libs/kinetic"], function(Kinetic) {
 
         gameOver: false,
 
+        onInit: function() {
+        },
+
+        onGameOver: function() {
+        },
+
         setStage: function(stage) {
             this.stage = stage;
         },
@@ -38,7 +46,7 @@ define(["libs/kinetic"], function(Kinetic) {
             this.layer = layer;
         },
 
-        reset: function() {
+        reload: function() {
             // vyresetujeme hraciu dosku
             this.gameOver = false;
             this.board = [
@@ -68,6 +76,19 @@ define(["libs/kinetic"], function(Kinetic) {
             this.draw();
 
             this.layer.draw();
+        },
+
+        init: function() {
+            this.victories[this.PLAYER_HUMAN] = 0;
+            this.victories[this.PLAYER_AI]    = 0;
+            this.victories[this.PLAYER_NONE]  = 0;
+
+            this.onInit(this.victories);
+        },
+
+        reset: function() {
+            this.init();
+            this.reload();
         },
 
         draw: function() {
@@ -424,7 +445,10 @@ define(["libs/kinetic"], function(Kinetic) {
             if (((winner = this.checkLines()) !== this.PLAYER_NONE)
             || ((winner = this.checkColumns()) !== this.PLAYER_NONE)
             || ((winner = this.checkDiagonals()) !== this.PLAYER_NONE)) {
-                console.log("Vyhral hrac: " + winner);
+                this.victories[winner] = this.victories[winner] + 1;
+
+                this.onGameOver(winner, this.victories);
+
                 this.gameOver = true;
 
                 return true;
@@ -440,7 +464,10 @@ define(["libs/kinetic"], function(Kinetic) {
                 }
 
                 if (numFree === 0) {
-                    console.log("remiza");
+                    this.victories[this.PLAYER_NONE] = this.victories[this.PLAYER_NONE] + 1;
+
+                    this.onGameOver(winner, this.victories);
+
                     this.gameOver = true;
 
                     return true;
