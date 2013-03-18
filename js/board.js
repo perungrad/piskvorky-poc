@@ -1,609 +1,151 @@
-define(["libs/kinetic"], function(Kinetic) {
-    var Board = {
-        PLAYER_NONE: 0,
-        PLAYER_HUMAN: 1,
-        PLAYER_AI: 2,
+define(["players"], function(players) {
+    var board = [];
 
-        victories: [],
+    var boardOptions = {
+        rows: 3,
+        columns: 3
+    };
 
-        board: [
-            [0, 0, 0],
-            [0, 0, 0],
-            [0, 0, 0]
-        ],
+    var init = function(options) {
+        var row, column;
 
-        weights: [
-            [1, 0, 1],
-            [0, 2, 0],
-            [1, 0, 1]
-        ],
+        boardOptions.rows    = options.rows || boardOptions.rows;
+        boardOptions.columns = options.columns || boardOptions.columns;
 
-        tiles: [
-            [],
-            [],
-            []
-        ],
+        board = [];
 
-        layer: null,
+        for (row = 0; row < boardOptions.rows; row = row + 1) {
+            board[row] = [];
 
-        stage: null,
-
-        playerColor: {},
-
-        gameOver: false,
-
-        onInit: function() {
-        },
-
-        onGameOver: function() {
-        },
-
-        setStage: function(stage) {
-            this.stage = stage;
-        },
-
-        setLayer: function(layer) {
-            this.layer = layer;
-        },
-
-        reload: function() {
-            // vyresetujeme hraciu dosku
-            this.gameOver = false;
-            this.board = [
-                [0, 0, 0],
-                [0, 0, 0],
-                [0, 0, 0]
-            ];
-
-            // vyresetujeme vahy
-            this.weights = [
-                [1, 0, 1],
-                [0, 2, 0],
-                [1, 0, 1]
-            ];
-
-            // zmazeme tiles
-            this.tiles = [
-                [],
-                [],
-                []
-            ];
-
-            // prekreslime hraciu plochu
-            this.layer.removeChildren();
-            this.layer.clear();
-
-            this.draw();
-
-            this.layer.draw();
-        },
-
-        init: function() {
-            this.victories[this.PLAYER_HUMAN] = 0;
-            this.victories[this.PLAYER_AI]    = 0;
-            this.victories[this.PLAYER_NONE]  = 0;
-
-            this.onInit(this.victories);
-        },
-
-        reset: function() {
-            this.init();
-            this.reload();
-        },
-
-        draw: function() {
-            var rect = new Kinetic.Rect({
-                x: 0,
-                y: 0,
-                width: this.stage.getWidth(),
-                height: this.stage.getHeight(),
-                stroke: 'black',
-                strokeWidth: 4
-            });
-
-            this.layer.add(rect);
-
-            var i, j;
-            var columns = this.board[0].length;
-            var rows = this.board.length;
-
-            var x, y;
-            var columnWidth = rect.getWidth() / columns;
-            var rowHeight = rect.getHeight() / rows;
-
-            for (i = 0; i < columns; i++) {
-                x = rect.getX() + columnWidth * i;
-                for (j = 0; j < rows; j++) {
-                    y = rect.getY() + rowHeight * j;
-
-                    var tile = new Kinetic.Rect({
-                        x: x,
-                        y: y,
-                        width: columnWidth,
-                        height: rowHeight,
-                        stroke: 'black',
-                        strokeWidth: 2,
-                        custom: {
-                            x: i,
-                            y: j
-                        }
-                    });
-
-                    this.tiles[i][j] = tile;
-
-                    tile.on("click touch", function() {
-                        if (Board.gameOver) {
-                            return false;
-                        }
-
-                        var x = this.attrs.custom.x;
-                        var y = this.attrs.custom.y;
-
-                        if (Board.board[x][y] === Board.PLAYER_NONE) {
-                            Board.placeToken(x, y, Board.PLAYER_HUMAN);
-
-                            if (!Board.gameOver) {
-                                Board.AIMove(Board.layer);
-                            }
-                        }
-                    });
-
-                    this.layer.add(tile);
-                }
-            }
-        },
-
-        calcWeights: function(x, y, increment) {
-            var i = 0;
-
-            var newWeights = [
-                {vx: -1, vy: 0},
-                {vx: 0, vy: -1},
-                {vx: 0, vy: 1},
-                {vx: 1, vy: 0}
-            ];
-
-            var doNotIncrementDiagonalsFor = [
-                {x: 0, y: 1},
-                {x: 1, y: 0},
-                {x: 1, y: 2},
-                {x: 2, y: 1}
-            ];
-
-            var diagonals = true;
-
-            for (i = 0; i < doNotIncrementDiagonalsFor.length; i++) {
-                if (x == doNotIncrementDiagonalsFor[i].x) {
-                    if (y == doNotIncrementDiagonalsFor[i].y) {
-                        diagonals = false;
-                        break;
-                    }
-                }
-            }
-
-            if (diagonals) {
-                newWeights.push({vx: -1, vy: -1});
-                newWeights.push({vx: -1, vy: 1});
-                newWeights.push({vx: 1, vy: -1});
-                newWeights.push({vx: 1, vy: 1});
-            }
-
-            var cx = 0;
-            var cy = 0;
-
-            this.weights[x][y] = 0;
-
-            for (i = 0; i < newWeights.length; i++) {
-                cx = x + newWeights[i].vx;
-                cy = y + newWeights[i].vy;
-
-                if (this.board[cx] === undefined) {
-                    continue;
-                }
-
-                if (this.board[cx][cy] === undefined) {
-                    continue;
-                }
-
-                if (this.board[cx][cy] === this.PLAYER_NONE) {
-                    this.weights[cx][cy] += increment;
-                } else if (this.board[cx][cy] === this.PLAYER_NONE) {
-                    this.weights[cx][cy] = 0;
-                } else if (this.board[cx][cy] === this.PLAYER_NONE) {
-                    this.weights[cx][cy] = 0;
-                }
-            }
-        },
-
-        placeToken: function(x, y, player) {
-            // umiestnit
-            this.board[x][y] = player;
-
-            // vyfarbit
-            this.tiles[x][y].setFill(this.playerColor[player]);
-
-            this.layer.draw();
-
-            // zvysit vahu
-            this.weights[x][y] = 0;
-
-            this.calcWeights(x, y, (player === this.PLAYER_AI) ? 2 : 1);
-
-            this.isVictory();
-        },
-
-        nextMove: function(player) {
-            var that = this;
-
-            var tileContainer = function() {
-                var container = {};
-
-                return {
-                    getContainer: function() {
-                        return container;
-                    },
-
-                    coor: function(x, y) {
-                        return String(x) + ':' + String(y);
-                    },
-
-                    deCoor: function(coorStr) {
-                        var arr = coorStr.split(':');
-
-                        return {
-                            x: parseInt(arr[0], 10),
-                            y: parseInt(arr[1], 10)
-                        };
-                    },
-
-                    push: function(tile) {
-                        var coorStr = this.coor(tile.x, tile.y);
-
-                        if (typeof container[coorStr] === 'number') {
-                            container[coorStr]++;
-                        }
-                        else {
-                            container[coorStr] = 1;
-                        }
-                    },
-
-                    getMax: function() {
-                        var name;
-                        var max = 0;
-                        var maxIndex = '';
-
-                        for (name in container) {
-                            if (container.hasOwnProperty(name)) {
-                                if (container[name] > max) {
-                                    max = container[name];
-                                    maxIndex = name;
-                                }
-                            }
-                        }
-
-                        if (maxIndex !== '') {
-                            return this.deCoor(maxIndex);
-                        }
-
-                        return;
-                    }
-                }
-            };
-
-            var winningMoves = tileContainer();
-            var blockingMoves = tileContainer();
-
-            var canWinLines = function() {
-                var i, j;
-                var emptyTiles = [];
-                var playerTiles = [];
-                var enemyTiles = [];
-                var tile;
-
-                for (j = 0; j < that.board[0].length; j++) {
-                    playerTiles = [];
-                    emptyTiles = [];
-                    enemyTiles = [];
-
-                    for (i = 0; i < that.board.length; i++) {
-                        tile = {
-                            x: i,
-                            y: j
-                        };
-
-                        if (that.board[i][j] === that.PLAYER_NONE) {
-                            emptyTiles.push(tile);
-                        }
-                        else if (that.board[i][j] === player) {
-                            playerTiles.push(tile);
-                        } else {
-                            enemyTiles.push(tile);
-                        }
-                    }
-
-                    if (emptyTiles.length == 1) {
-                        if (playerTiles.length == 2) {
-                            // hrac moze vyhrat jednym tahom
-                            winningMoves.push(emptyTiles[0]);
-                        }
-                        else if (enemyTiles.length == 2) {
-                            // protivnik moze vyhrat jednym tahom
-                            blockingMoves.push(emptyTiles[0]);
-                        }
-                    }
-                }
-            };
-
-            var canWinColumns = function() {
-                var i, j;
-                var emptyTiles = [];
-                var playerTiles = [];
-                var enemyTiles = [];
-                var tile;
-
-                for (i = 0; i < that.board.length; i++) {
-                    playerTiles = [];
-                    emptyTiles = [];
-                    enemyTiles = [];
-
-                    for (j = 0; j < that.board[i].length; j++) {
-                        tile = {
-                            x: i,
-                            y: j
-                        };
-
-                        if (that.board[i][j] === that.PLAYER_NONE) {
-                            emptyTiles.push(tile);
-                        } else if (that.board[i][j] === player) {
-                            playerTiles.push(tile);
-                        } else {
-                            enemyTiles.push(tile);
-                        }
-                    }
-
-                    if (emptyTiles.length === 1) {
-                        if (playerTiles.length === 2) {
-                            // hrac moze vyhrat jednym tahom
-                            winningMoves.push(emptyTiles[0]);
-                        } else if (enemyTiles.length === 2) {
-                            // protivnik moze vyhrat jednym tahom
-                            blockingMoves.push(emptyTiles[0]);
-                        }
-                    }
-                }
-            };
-
-            var canWinDiagonals = function() {
-                var diagonals = [
-                    [{x: 0, y: 0}, {x: 1, y: 1}, {x: 2, y: 2}],
-                    [{x: 0, y: 2}, {x: 1, y: 1}, {x: 2, y: 0}]
-                ];
-
-                var i, j;
-                var emptyTiles = [];
-                var playerTiles = [];
-                var enemyTiles = [];
-                var tile, checkingTile;
-
-                for (i = 0; i < diagonals.length; i++) {
-                    playerTiles = [];
-                    emptyTiles = [];
-                    enemyTiles = [];
-
-                    for (j = 0; j < diagonals[i].length; j++) {
-                        tile = {
-                            x: diagonals[i][j].x,
-                            y: diagonals[i][j].y
-                        };
-
-                        checkingTile = that.board[diagonals[i][j].x][diagonals[i][j].y];
-
-                        if (checkingTile === that.PLAYER_NONE) {
-                            emptyTiles.push(tile);
-                        }
-                        else if (checkingTile === player) {
-                            playerTiles.push(tile);
-                        } else {
-                            enemyTiles.push(tile);
-                        }
-                    }
-
-                    if (emptyTiles.length == 1) {
-                        if (playerTiles.length == 2) {
-                            // hrac moze vyhrat jednym tahom
-                            winningMoves.push(emptyTiles[0]);
-                        }
-                        else if (enemyTiles.length == 2) {
-                            // protivnik moze vyhrat jednym tahom
-                            blockingMoves.push(emptyTiles[0]);
-                        }
-                    }
-                }
-            };
-
-            canWinLines();
-            canWinColumns();
-            canWinDiagonals();
-
-            var winningMove = winningMoves.getMax();
-            var blockingMove = blockingMoves.getMax();
-
-            if (winningMove) {
-                return winningMove;
-            }
-
-            if (blockingMove) {
-                return blockingMove;
-            }
-
-            return;
-        },
-
-        isVictory: function() {
-            var i, j, numFree = 0;
-
-            if (((winner = this.checkLines()) !== this.PLAYER_NONE)
-            || ((winner = this.checkColumns()) !== this.PLAYER_NONE)
-            || ((winner = this.checkDiagonals()) !== this.PLAYER_NONE)) {
-                this.victories[winner] = this.victories[winner] + 1;
-
-                this.onGameOver(winner, this.victories);
-
-                this.gameOver = true;
-
-                return true;
-            }
-            else {
-                // zistime, ci bola zaplnena hracia plocha
-                for (i = 0; i < this.board.length; i++) {
-                    for (j = 0; j < this.board[i].length; j++) {
-                        if (this.board[i][j] === this.PLAYER_NONE) {
-                            numFree++;
-                        }
-                    }
-                }
-
-                if (numFree === 0) {
-                    this.victories[this.PLAYER_NONE] = this.victories[this.PLAYER_NONE] + 1;
-
-                    this.onGameOver(winner, this.victories);
-
-                    this.gameOver = true;
-
-                    return true;
-                }
-            }
-
-            return false;
-        },
-
-        checkLines: function() {
-            var i = 0;
-            var j = 0;
-
-            var last = 0;
-            var found = false;
-
-            var winner = this.PLAYER_NONE;
-
-            // preverime riadky
-            for (i = 0; i < this.board.length; i++) {
-                last = this.board[i][0];
-                found = false;
-                for (j = 1; j < this.board[i].length; j++) {
-                    if (this.board[i][j] == last) {
-                        found = true;
-                    } else {
-                        found = false;
-                        break;
-                    }
-                }
-
-                if (found) {
-                    winner = last;
-                    break;
-                }
-            }
-
-            return winner;
-        },
-
-        checkColumns: function() {
-            var i = 0;
-            var j = 0;
-
-            var last = 0;
-            var found = false;
-
-            var winner = this.PLAYER_NONE;
-
-            var rows = this.board.length;
-            var cols = this.board[0].length;
-
-            // preverime riadky
-            for (i = 0; i < cols; i++) {
-                last = this.board[0][i];
-                found = false;
-                for (j = 1; j < rows; j++) {
-                    if (this.board[j][i] == last) {
-                        found = true;
-                    } else {
-                        found = false;
-                        break;
-                    }
-                }
-
-                if (found) {
-                    winner = last;
-                    break;
-                }
-            }
-
-            return winner;
-        },
-
-        checkDiagonals: function() {
-            var centralPlayer = this.board[1][1];
-
-            if (centralPlayer != this.PLAYER_NONE) {
-                if ((this.board[0][0] == centralPlayer)
-                && (this.board[2][2] == centralPlayer)) {
-                    return centralPlayer;
-                }
-
-                if ((this.board[0][2] == centralPlayer)
-                && (this.board[2][0] == centralPlayer)) {
-                    return centralPlayer;
-                }
-            }
-
-            return this.PLAYER_NONE;
-        },
-
-        AIMove: function(layer) {
-            var i = 0;
-            var j = 0;
-
-            //zistime, ci vieme doplnit poslednu piskvorku
-            var next = this.nextMove(this.PLAYER_AI);
-
-            if (next) {
-                this.placeToken(next.x, next.y, this.PLAYER_AI);
-                return;
-            }
-
-            // najdeme policko s najvyssou vahou
-            var max = 0;
-            var maxList = [];
-
-            for (i = 0; i < this.board.length; i++) {
-                for (j = 0; j < this.board[i].length; j++) {
-                    if (this.weights[i][j] > max) {
-                        max = this.weights[i][j];
-                        maxList = [ {x: i, y: j} ];
-                    } else if (this.weights[i][j] == max) {
-                        if (max > 0) {
-                            maxList.push({x: i, y: j});
-                        }
-                    }
-                }
-            }
-
-            if (maxList.length > 0)  {
-                var position = Math.floor(Math.random() * maxList.length);
-
-                var x = maxList[position].x;
-                var y = maxList[position].y;
-
-                if (this.tiles[x][y]) {
-                    this.placeToken(x, y, this.PLAYER_AI);
-                }
+            for (column = 0; column < boardOptions.columns; column = column + 1) {
+                board[row][column] = players.TYPE_NONE;
             }
         }
     };
 
-    Board.playerColor[Board.PLAYER_HUMAN] = 'green';
-    Board.playerColor[Board.PLAYER_AI]    = 'red';
+    var findDiagonalCells = function(startRow, startColumn, rightToLeft) {
+        var cells = [];
 
-    return Board;
+        var row    = startRow;
+        var column = startColumn;
+
+        rightToLeft = rightToLeft || false;
+
+        while (
+            (row >= 0)
+            && (column >= 0)
+            && (row < boardOptions.rows)
+            && (column < boardOptions.columns)
+        ) {
+            cells.push({
+                row: row,
+                column: column
+            });
+
+            row    = row + 1;
+
+            if (rightToLeft) {
+                column = column - 1;
+            } else {
+                column = column + 1;
+            }
+        }
+
+        return cells;
+    };
+
+    return {
+        init: function(options) {
+            init(options);
+        },
+
+        getRowsCount: function() {
+            return boardOptions.rows;
+        },
+
+        getColumnsCount: function() {
+            return boardOptions.columns;
+        },
+
+        getRows: function() {
+            var rows = [];
+            var row, column;
+
+            for (row = 0; row < boardOptions.rows; row = row + 1) {
+                rows[row] = [];
+                for (column = 0; column < boardOptions.columns; column = column + 1) {
+                    rows[row].push({
+                        row: row,
+                        column: column
+                    });
+                }
+            }
+
+            return rows;
+        },
+
+        getColumns: function() {
+            var columns = [];
+            var row, column;
+
+            for (column = 0; column < boardOptions.columns; column = column + 1) {
+                columns[column] = [];
+                for (row = 0; row < boardOptions.rows; row = row + 1) {
+                    columns[column].push({
+                        row: row,
+                        column: column
+                    });
+                }
+            }
+
+            return columns;
+        },
+
+        getDiagonals: function(minLength) {
+            var diagonals = [];
+            var row, column, startRow, startColumn;
+            var idx = 0;
+
+            minLength = minLength || 3;
+
+            // najskor pozrieme diagonaly od laveho okraja plochy smerom dole
+            for (startRow = 0; startRow <= boardOptions.rows - minLength; startRow = startRow + 1) {
+                diagonals[idx] = findDiagonalCells(startRow, 0);
+                idx = idx + 1;
+            }
+
+            // teraz pozrieme diagonaly od horneho riadku smerom doprava
+            for (startColumn = 1; startColumn <= boardOptions.columns - minLength; startColumn = startColumn + 1) {
+                diagonals[idx] = findDiagonalCells(0, startColumn);
+                idx = idx + 1;
+            }
+
+            // od praveho okraja smerom vlavo dole
+            for (startRow = 0; startRow <= boardOptions.rows - minLength; startRow = startRow + 1) {
+                diagonals[idx] = findDiagonalCells(startRow, boardOptions.columns - 1, true);
+                idx = idx + 1;
+
+            }
+
+            // od horneho okraja smerom vlavo dole
+            for (startColumn = minLength - 1; startColumn < boardOptions.columns - 1; startColumn = startColumn + 1) {
+                diagonals[idx] = findDiagonalCells(0, startColumn, true);
+                idx = idx + 1;
+            }
+
+            return diagonals;
+        },
+
+        getPositionOwner: function(row, column) {
+            return board[row][column];
+        },
+
+        setPositionOwner: function(row, column, playerType) {
+            if ((row >= 0) && (row < boardOptions.rows)) {
+                if ((column >= 0) && (column < boardOptions.columns)) {
+                    board[row][column] = playerType;
+                }
+            }
+        }
+    }
 });
