@@ -2,7 +2,7 @@ define(["libs/kinetic"], function(Kinetic) {
     var that;
     var init, createStage;
     var drawToken, drawLines, drawInteractiveTile, drawBoard;
-    var drawEmptyToken, drawHumanToken, drawAIToken;
+    var drawEmptyToken, drawHumanToken, drawAIToken, placeToken;
 
     that = {
         board: null,
@@ -121,15 +121,20 @@ define(["libs/kinetic"], function(Kinetic) {
         that.boardLayer.add(line);
     };
 
-    drawToken = function(row, column, owner) {
-        if (owner == that.players.TYPE_HUMAN) {
+    placeToken = function(row, column, owner) {
+        if (owner === that.players.TYPE_HUMAN) {
             drawHumanToken(row, column);
-        } else if (owner == that.players.TYPE_AI) {
+        } else if (owner === that.players.TYPE_AI) {
             drawAIToken(row, column);
         } else {
             drawEmptyToken();
         }
     };
+
+    drawToken = function (row, column, owner) {
+        placeToken(row, column, owner);
+        that.boardLayer.draw();
+    }
 
     drawInteractiveTile = function(row, column, onTileClick) {
         var tile = new Kinetic.Rect({
@@ -155,7 +160,7 @@ define(["libs/kinetic"], function(Kinetic) {
 
         for (row = 0; row < that.rows; row = row + 1) {
             for (column = 0; column < that.columns; column = column + 1) {
-                drawToken(row, column, that.board.getPositionOwner(row, column));
+                placeToken(row, column, that.board.getPositionOwner(row, column));
 
                 drawInteractiveTile(row, column, onTileClick);
             }
