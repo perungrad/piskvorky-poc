@@ -1,10 +1,12 @@
-define(function() {
-    var score = {};
-    var names = {};
-    var ids = [];
+define(function () {
+    'use strict';
+
+    var score = {},
+        names = {},
+        ids = [];
 
     return {
-        addPlayer: function(id, name, points) {
+        addPlayer: function (id, name, points) {
             points = points || 0;
 
             score[id] = points;
@@ -13,16 +15,16 @@ define(function() {
             ids.push(id);
         },
 
-        setScore: function(id, points) {
-            if (name[id] === undefined) {
+        setScore: function (id, points) {
+            if (names[id] === undefined) {
                 return;
             }
 
             score[id] = points;
         },
 
-        increaseScore: function(id, inc) {
-            if (name[id] === undefined) {
+        increaseScore: function (id, inc) {
+            if (names[id] === undefined) {
                 return;
             }
 
@@ -31,8 +33,8 @@ define(function() {
             score[id] = score[id] + inc;
         },
 
-        decreaseScore: function(id, dec) {
-            if (name[id] === undefined) {
+        decreaseScore: function (id, dec) {
+            if (names[id] === undefined) {
                 return;
             }
 
@@ -41,17 +43,17 @@ define(function() {
             score[id] = score[id] - dec;
         },
 
-        getScore: function(id) {
+        getScore: function (id) {
             return score[id];
         },
 
-        getName: function(id) {
+        getName: function (id) {
             return names[id];
         },
 
-        reset: function() {
-            var i = 0;
-            var id = '';
+        reset: function () {
+            var i = 0,
+                id = '';
 
             for (i = 0; i < ids.length; i = i + 1) {
                 id = ids[i];

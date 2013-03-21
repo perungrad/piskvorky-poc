@@ -1,13 +1,17 @@
-define(["players"], function(players) {
-    var board = [];
+define(["players"], function (players) {
+    'use strict';
 
-    var boardOptions = {
-        rows: 3,
-        columns: 3
-    };
+    var board = [],
+        boardOptions = {
+            rows: 3,
+            columns: 3
+        },
+        init,
+        findDiagonalCells;
 
-    var init = function(options) {
-        var row, column;
+    init = function (options) {
+        var row,
+            column;
 
         boardOptions.rows    = options.rows || boardOptions.rows;
         boardOptions.columns = options.columns || boardOptions.columns;
@@ -23,20 +27,14 @@ define(["players"], function(players) {
         }
     };
 
-    var findDiagonalCells = function(startRow, startColumn, rightToLeft) {
-        var cells = [];
-
-        var row    = startRow;
-        var column = startColumn;
+    findDiagonalCells = function (startRow, startColumn, rightToLeft) {
+        var cells = [],
+            row = startRow,
+            column = startColumn;
 
         rightToLeft = rightToLeft || false;
 
-        while (
-            (row >= 0)
-            && (column >= 0)
-            && (row < boardOptions.rows)
-            && (column < boardOptions.columns)
-        ) {
+        while ((row >= 0) && (column >= 0) && (row < boardOptions.rows) && (column < boardOptions.columns)) {
             cells.push({
                 row: row,
                 column: column
@@ -55,21 +53,22 @@ define(["players"], function(players) {
     };
 
     return {
-        init: function(options) {
+        init: function (options) {
             init(options);
         },
 
-        getRowsCount: function() {
+        getRowsCount: function () {
             return boardOptions.rows;
         },
 
-        getColumnsCount: function() {
+        getColumnsCount: function () {
             return boardOptions.columns;
         },
 
-        getRows: function() {
-            var rows = [];
-            var row, column;
+        getRows: function () {
+            var rows = [],
+                row,
+                column;
 
             for (row = 0; row < boardOptions.rows; row = row + 1) {
                 rows[row] = [];
@@ -84,9 +83,10 @@ define(["players"], function(players) {
             return rows;
         },
 
-        getColumns: function() {
-            var columns = [];
-            var row, column;
+        getColumns: function () {
+            var columns = [],
+                row,
+                column;
 
             for (column = 0; column < boardOptions.columns; column = column + 1) {
                 columns[column] = [];
@@ -101,10 +101,13 @@ define(["players"], function(players) {
             return columns;
         },
 
-        getDiagonals: function(minLength) {
-            var diagonals = [];
-            var row, column, startRow, startColumn;
-            var idx = 0;
+        getDiagonals: function (minLength) {
+            var diagonals = [],
+                row,
+                column,
+                startRow,
+                startColumn,
+                idx = 0;
 
             minLength = minLength || 3;
 
@@ -136,16 +139,20 @@ define(["players"], function(players) {
             return diagonals;
         },
 
-        getPositionOwner: function(row, column) {
-            return board[row][column];
+        getPositionOwner: function (row, column) {
+            if (board[row] !== undefined) {
+                return board[row][column];
+            }
+
+            return undefined;
         },
 
-        setPositionOwner: function(row, column, playerType) {
+        setPositionOwner: function (row, column, playerType) {
             if ((row >= 0) && (row < boardOptions.rows)) {
                 if ((column >= 0) && (column < boardOptions.columns)) {
                     board[row][column] = playerType;
                 }
             }
         }
-    }
+    };
 });

@@ -1,8 +1,17 @@
-define(["libs/kinetic"], function(Kinetic) {
-    var that;
-    var init, createStage;
-    var drawToken, drawLines, drawInteractiveTile, drawBoard;
-    var drawEmptyToken, drawHumanToken, drawAIToken, placeToken;
+define(["libs/kinetic"], function (Kinetic) {
+    'use strict';
+
+    var that,
+        init,
+        createStage,
+        drawToken,
+        drawLines,
+        drawInteractiveTile,
+        drawBoard,
+        drawEmptyToken,
+        drawHumanToken,
+        drawAIToken,
+        placeToken;
 
     that = {
         board: null,
@@ -18,7 +27,7 @@ define(["libs/kinetic"], function(Kinetic) {
         columns: 0
     };
 
-    init = function(board, players) {
+    init = function (board, players) {
         that.board   = board;
         that.players = players;
 
@@ -27,7 +36,7 @@ define(["libs/kinetic"], function(Kinetic) {
 
     };
 
-    createStage = function() {
+    createStage = function () {
         that.stage = new Kinetic.Stage({
             container: 'stage',
             width: 400,
@@ -48,7 +57,7 @@ define(["libs/kinetic"], function(Kinetic) {
         that.cellHeight = Math.round(that.height / that.columns);
     };
 
-    drawLines = function() {
+    drawLines = function () {
         var i, line;
 
         for (i = 0; i <= that.rows; i = i + 1) {
@@ -74,11 +83,11 @@ define(["libs/kinetic"], function(Kinetic) {
         that.boardLayer.draw();
     };
 
-    drawEmptyToken = function(row, column) {
+    drawEmptyToken = function (row, column) {
         return;
     };
 
-    drawHumanToken = function(row, column) {
+    drawHumanToken = function (row, column) {
         var circle = new Kinetic.Ellipse({
             x: (column * that.cellWidth) + (that.cellWidth / 2),
             y: (row * that.cellHeight) + (that.cellHeight / 2),
@@ -93,7 +102,7 @@ define(["libs/kinetic"], function(Kinetic) {
         that.boardLayer.add(circle);
     };
 
-    drawAIToken = function(row, column) {
+    drawAIToken = function (row, column) {
         var line = new Kinetic.Line({
             points: [
                 (column * that.cellWidth) + (that.cellWidth  * 0.1),
@@ -121,7 +130,7 @@ define(["libs/kinetic"], function(Kinetic) {
         that.boardLayer.add(line);
     };
 
-    placeToken = function(row, column, owner) {
+    placeToken = function (row, column, owner) {
         if (owner === that.players.TYPE_HUMAN) {
             drawHumanToken(row, column);
         } else if (owner === that.players.TYPE_AI) {
@@ -134,9 +143,9 @@ define(["libs/kinetic"], function(Kinetic) {
     drawToken = function (row, column, owner) {
         placeToken(row, column, owner);
         that.boardLayer.draw();
-    }
+    };
 
-    drawInteractiveTile = function(row, column, onTileClick) {
+    drawInteractiveTile = function (row, column, onTileClick) {
         var tile = new Kinetic.Rect({
             x: column * that.cellWidth,
             y: row * that.cellHeight,
@@ -147,7 +156,7 @@ define(["libs/kinetic"], function(Kinetic) {
         });
 
         if (onTileClick !== undefined) {
-            tile.on("click touch", function() {
+            tile.on("click touch", function () {
                 onTileClick(row, column);
             });
         }
@@ -155,7 +164,10 @@ define(["libs/kinetic"], function(Kinetic) {
         that.interactiveLayer.add(tile);
     };
 
-    drawBoard = function(onTileClick) {
+    drawBoard = function (onTileClick) {
+        var row,
+            column;
+
         drawLines();
 
         for (row = 0; row < that.rows; row = row + 1) {
@@ -171,19 +183,19 @@ define(["libs/kinetic"], function(Kinetic) {
     };
 
     return {
-        init: function(board, players) {
+        init: function (board, players) {
             init(board, players);
         },
 
-        createStage: function() {
+        createStage: function () {
             createStage();
         },
 
-        drawBoard: function(onTileClick) {
+        drawBoard: function (onTileClick) {
             drawBoard(onTileClick);
         },
 
-        drawToken: function(row, column, owner) {
+        drawToken: function (row, column, owner) {
             drawToken(row, column, owner);
         }
     };
